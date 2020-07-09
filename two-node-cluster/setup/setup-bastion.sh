@@ -40,10 +40,13 @@ function usage() {
     echo ""
 }
 
-while getopts "w:i:l:r:h" opts; do
+while getopts "w:i:l:r:h:a" opts; do
     case $opts in
     w)
-        wso2_is_1_ip=${OPTARG}
+        adminPassword=${OPTARG}
+        ;;
+    a)
+        adminCredentials=${OPTARG}
         ;;
     i)
         wso2_is_2_ip=${OPTARG}
@@ -65,6 +68,8 @@ while getopts "w:i:l:r:h" opts; do
     esac
 done
 
+
+wso2_is_1_ip=$wso2_is_2_ip
 if [[ -z $wso2_is_1_ip ]]; then
     echo "Please provide the private IP of WSO2 IS node 1."
     exit 1
@@ -118,13 +123,4 @@ sudo chown -R ubuntu:ubuntu apache-jmeter-*
 sudo chown -R ubuntu:ubuntu /tmp/jmeter.log
 sudo chown -R ubuntu:ubuntu jmeter.log
 
-echo ""
-echo "Coping files to NGinx instance..."
-echo "============================================"
-sudo -u ubuntu scp -r /home/ubuntu/workspace/setup/resources/ $lb_alias:/home/ubuntu/
-sudo -u ubuntu scp /home/ubuntu/workspace/setup/setup-nginx.sh $lb_alias:/home/ubuntu/
 
-echo ""
-echo "Setting up NGinx..."
-echo "============================================"
-sudo -u ubuntu ssh $lb_alias ./setup-nginx.sh -i "$wso2_is_1_ip" -w "$wso2_is_2_ip"

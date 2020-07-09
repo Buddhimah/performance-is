@@ -47,7 +47,7 @@ git clone https://github.com/wso2/performance-is
 2. Checkout master branch for the latest Identity Server version or relevant version tag for previous releases.
 ```console
 cd performance-is
-git checkout v5.8.0
+git checkout cloud-perf
 ```
 3. Build the artifacts using Maven.
 ```console
@@ -57,7 +57,7 @@ mvn clean install
 4. Based on your preferred deployment, navigate to `single-node` directory or `two-node-cluster` directory.
 4. Run the `start-performance.sh` script. It will take around 15 hours to complete the test round with default settings. Therefore, you might want to use `nohup`. Following is the basic command.
 ```console
-./start-performance.sh -k is-perf-test.pem -a ******* -s ******* -c is-perf-cert -n wso2IS.zip -j apache-jmeter-3.3.tgz -- -d 10 -w 2
+/start-performance.sh -k is-perf-test.pem -j /Users/wso2/Documents/Cloud/perf/arfacts/apache-jmeter-5.3.tgz -n /Users/wso2/Documents/Cloud/perf/arfacts/wso2is.zip -c <Bastion Host IP> -s <RDS HOST NAME> -a <CLOUD DNS>  -i <Base64 Encoded Cloud admin username:password> -b admin -u <rdsusername> -p <rdspassword>
 ```
 
 See usage:

@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
 # Copyright (c) 2019, wso2 Inc. (http://wso2.org) All Rights Reserved.
 #
 # wso2 Inc. licenses this file to you under the Apache License,
@@ -24,13 +24,11 @@ source ../common/common-functions.sh
 script_start_time=$(date +%s)
 timestamp=$(date +%Y-%m-%d--%H-%M-%S)
 
-random_number=$RANDOM
-# random_number=21265
-
-stack_name="is-performance-two-node--$timestamp--$random_number"
 
 key_file=""
-aws_access_key=""
+bastion_node_ip=""
+rds_host=""
+nginx_instance_ip=""
 aws_access_secret=""
 certificate_name=""
 jmeter_setup=""
@@ -63,17 +61,17 @@ function usage() {
     echo "   [-w <minimum_stack_creation_wait_time>] [-h]"
     echo ""
     echo "-k: The Amazon EC2 key file to be used to access the instances."
-    echo "-a: The AWS access key."
-    echo "-s: The AWS access secret."
+    echo "-a: The perf cloud domain name: "
+    echo "-s: The AWS RDS host name."
     echo "-j: The path to JMeter setup."
-    echo "-c: The name of the IAM certificate."
+    echo "-c: IS Bastion host ip."
     echo "-n: The is server zip"
     echo "-u: The database username. Default: $default_db_username."
     echo "-p: The database password. Default: $default_db_password."
     echo "-d: The database storage in GB. Default: $default_db_storage."
     echo "-e: The database instance type. Default: $default_db_instance_type."
-    echo "-i: The instance type used for IS nodes. Default: $default_is_instance_type."
-    echo "-b: The instance type used for the bastion node. Default: $default_bastion_instance_type."
+    echo "-i: Base 64 encoded adminCredentials: $adminCredentials."
+    echo "-b: Plain test admin user password : $adminPassword."
     echo "-w: The minimum time to wait in minutes before polling for cloudformation stack's CREATE_COMPLETE status."
     echo "    Default: $default_minimum_stack_creation_wait_time minutes."
     echo "-h: Display this help and exit."
@@ -86,13 +84,13 @@ while getopts "k:a:s:c:j:n:u:p:d:e:i:b:w:h" opts; do
         key_file=${OPTARG}
         ;;
     a)
-        aws_access_key=${OPTARG}
+        nginx_instance_ip=${OPTARG}
         ;;
     s)
-        aws_access_secret=${OPTARG}
+        rds_host=${OPTARG}
         ;;
     c)
-        certificate_name=${OPTARG}
+        bastion_node_ip=${OPTARG}
         ;;
     j)
         jmeter_setup=${OPTARG}
@@ -113,10 +111,10 @@ while getopts "k:a:s:c:j:n:u:p:d:e:i:b:w:h" opts; do
         db_instance_type=${OPTARG}
         ;;
     i)
-        wso2_is_instance_type=${OPTARG}
+        adminCredentials=${OPTARG}
         ;;
     b)
-        bastion_instance_type=${OPTARG}
+        adminPassword=${OPTARG}
         ;;
     w)
         minimum_stack_creation_wait_time=${OPTARG}
@@ -145,15 +143,6 @@ if [[ ${key_file: -4} != ".pem" ]]; then
     exit 1
 fi
 
-if [[ -z $aws_access_key ]]; then
-    echo "Please provide the AWS access Key."
-    exit 1
-fi
-
-if [[ -z $aws_access_secret ]]; then
-    echo "Please provide the AWS access secret."
-    exit 1
-fi
 
 if [[ -z $db_username ]]; then
     echo "Please provide the database username."
@@ -170,18 +159,13 @@ if [[ -z $db_storage ]]; then
     exit 1
 fi
 
-if [[ -z $db_instance_type ]]; then
+if [[ -z $adminCredentials ]]; then
     echo "Please provide the database instance type."
     exit 1
 fi
 
 if [[ -z $jmeter_setup ]]; then
     echo "Please provide the path to JMeter setup."
-    exit 1
-fi
-
-if [[ -z $certificate_name ]]; then
-    echo "Please provide the name of the IAM certificate."
     exit 1
 fi
 
@@ -232,119 +216,25 @@ $estimate_command
 
 temp_dir=$(mktemp -d)
 
-# Get absolute paths
-key_file=$(realpath "$key_file")
 
 echo "your key is"
 echo "$key_file"
 
 ln -s "$key_file" "$temp_dir"/"$key_filename"
 
-echo ""
-echo "Preparing cloud formation template..."
-echo "============================================"
-echo "random_number: $random_number"
-cp 2-node-cluster.yml new-2-node-cluster.yml
-sed -i "s/suffix/$random_number/" new-2-node-cluster.yml
-
-echo ""
-echo "Validating stack..."
-echo "============================================"
-aws cloudformation validate-template --template-body file://new-2-node-cluster.yml
-
-# Save metadata
-test_parameters_json='.'
-test_parameters_json+=' | .["is_nodes_ec2_instance_type"]=$is_nodes_ec2_instance_type'
-test_parameters_json+=' | .["bastion_node_ec2_instance_type"]=$bastion_node_ec2_instance_type'
-jq -n \
-    --arg is_nodes_ec2_instance_type "$wso2_is_instance_type" \
-    --arg bastion_node_ec2_instance_type "$bastion_instance_type" \
-    "$test_parameters_json" > "$results_dir"/cf-test-metadata.json
-
-stack_create_start_time=$(date +%s)
-create_stack_command="aws cloudformation create-stack --stack-name $stack_name \
-    --template-body file://new-2-node-cluster.yml --parameters \
-        ParameterKey=CertificateName,ParameterValue=$certificate_name \
-        ParameterKey=KeyPairName,ParameterValue=$key_name \
-        ParameterKey=DBUsername,ParameterValue=$db_username \
-        ParameterKey=DBPassword,ParameterValue=$db_password \
-        ParameterKey=DBAllocationStorage,ParameterValue=$db_storage \
-        ParameterKey=DBInstanceType,ParameterValue=$db_instance_type \
-        ParameterKey=WSO2InstanceType,ParameterValue=$wso2_is_instance_type \
-        ParameterKey=BastionInstanceType,ParameterValue=$bastion_instance_type \
-    --capabilities CAPABILITY_IAM"
-
-echo ""
-echo "Creating stack..."
-echo "============================================"
-echo "$create_stack_command"
-stack_id="$($create_stack_command)"
-stack_id=$(echo "$stack_id"|jq -r .StackId)
-
-# Delete the stack in case of an error.
-trap 'exit_handler "$results_dir" "$stack_id" "$script_start_time"' EXIT
-
-echo ""
-echo "Created stack ID: $stack_id"
-rm new-2-node-cluster.yml
-
-echo ""
-echo "Waiting ${minimum_stack_creation_wait_time}m before polling for cloudformation stack's CREATE_COMPLETE status..."
-sleep "${minimum_stack_creation_wait_time}"m
-
-echo ""
-echo "Polling till the stack creation completes..."
-aws cloudformation wait stack-create-complete --stack-name "$stack_id"
-printf "Stack creation time: %s\n" "$(format_time "$(measure_time "$stack_create_start_time")")"
-
-echo ""
-echo "Getting Bastion Node Public IP..."
-bastion_instance="$(aws cloudformation describe-stack-resources --stack-name "$stack_id" --logical-resource-id WSO2BastionInstance"$random_number" | jq -r '.StackResources[].PhysicalResourceId')"
-bastion_node_ip="$(aws ec2 describe-instances --instance-ids "$bastion_instance" | jq -r '.Reservations[].Instances[].PublicIpAddress')"
 echo "Bastion Node Public IP: $bastion_node_ip"
 
-echo ""
-echo "Getting NGinx Instance Private IP..."
-nginx_instance="$(aws cloudformation describe-stack-resources --stack-name "$stack_id" --logical-resource-id WSO2NGinxInstance"$random_number" | jq -r '.StackResources[].PhysicalResourceId')"
-nginx_instance_ip="$(aws ec2 describe-instances --instance-ids "$nginx_instance" | jq -r '.Reservations[].Instances[].PrivateIpAddress')"
-echo "NGinx Instance Private IP: $nginx_instance_ip"
 
-echo ""
-echo "Getting WSO2 IS Node 1 Private IP..."
-wso2is_1_auto_scaling_grp="$(aws cloudformation describe-stack-resources --stack-name "$stack_id" --logical-resource-id WSO2ISNode1AutoScalingGroup"$random_number" | jq -r '.StackResources[].PhysicalResourceId')"
-wso2is_1_instance="$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$wso2is_1_auto_scaling_grp" | jq -r '.AutoScalingGroups[].Instances[].InstanceId')"
-wso2_is_1_ip="$(aws ec2 describe-instances --instance-ids "$wso2is_1_instance" | jq -r '.Reservations[].Instances[].PrivateIpAddress')"
-echo "WSO2 IS Node 1 Private IP: $wso2_is_1_ip"
-
-echo ""
-echo "Getting WSO2 IS Node 2 Private IP..."
-wso2is_2_auto_scaling_grp="$(aws cloudformation describe-stack-resources --stack-name "$stack_id" --logical-resource-id WSO2ISNode2AutoScalingGroup"$random_number" | jq -r '.StackResources[].PhysicalResourceId')"
-wso2is_2_instance="$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$wso2is_2_auto_scaling_grp" | jq -r '.AutoScalingGroups[].Instances[].InstanceId')"
-wso2_is_2_ip="$(aws ec2 describe-instances --instance-ids "$wso2is_2_instance" | jq -r '.Reservations[].Instances[].PrivateIpAddress')"
-echo "WSO2 IS Node 2 Private IP: $wso2_is_2_ip"
-
-echo ""
-echo "Getting RDS Hostname..."
-rds_instance="$(aws cloudformation describe-stack-resources --stack-name "$stack_id" --logical-resource-id WSO2ISDBInstance"$random_number" | jq -r '.StackResources[].PhysicalResourceId')"
-rds_host="$(aws rds describe-db-instances --db-instance-identifier "$rds_instance" | jq -r '.DBInstances[].Endpoint.Address')"
 echo "RDS Hostname: $rds_host"
 
 if [[ -z $bastion_node_ip ]]; then
     echo "Bastion node IP could not be found. Exiting..."
     exit 1
 fi
-if [[ -z $nginx_instance_ip ]]; then
-    echo "Load balancer IP could not be found. Exiting..."
-    exit 1
-fi
-if [[ -z $wso2_is_1_ip ]]; then
-    echo "WSO2 node 1 IP could not be found. Exiting..."
-    exit 1
-fi
-if [[ -z $wso2_is_2_ip ]]; then
-    echo "WSO2 node 2 IP could not be found. Exiting..."
-    exit 1
-fi
+
+wso2_is_1_ip=$bastion_node_ip
+wso2_is_2_ip=$bastion_node_ip
+
 if [[ -z $rds_host ]]; then
     echo "RDS host could not be found. Exiting..."
     exit 1
@@ -379,45 +269,19 @@ $copy_connector_command
 echo ""
 echo "Running Bastion Node setup script..."
 echo "============================================"
-setup_bastion_node_command="ssh -i $key_file -o "StrictHostKeyChecking=no" -t ubuntu@$bastion_node_ip \
-    sudo ./setup/setup-bastion.sh -w $wso2_is_1_ip -i $wso2_is_2_ip -r $rds_host -l $nginx_instance_ip"
+setup_bastion_node_command="ssh -i $key_file  -o "StrictHostKeyChecking=no" -t ubuntu@$bastion_node_ip \
+    sudo ./setup/setup-bastion.sh  -i $wso2_is_2_ip -r $rds_host -l $nginx_instance_ip -a $adminCredentials -w $adminPassword"
 echo "$setup_bastion_node_command"
 # Handle any error and let the script continue.
 $setup_bastion_node_command || echo "Remote ssh command failed."
 
-echo ""
-echo "Creating databases in RDS..."
-echo "============================================"
-create_db_command="ssh -i $key_file -o "StrictHostKeyChecking=no" -t ubuntu@$bastion_node_ip mysql -h $rds_host \
-    -u wso2carbon -pwso2carbon < /home/ubuntu/workspace/setup/resources/createDB.sql"
-echo "$create_db_command"
-ssh -i "$key_file" -o "StrictHostKeyChecking=no" -t ubuntu@"$bastion_node_ip" "cd /home/ubuntu/ ; unzip -q wso2is.zip ; \
-    mv wso2is-* wso2is"
-$create_db_command
 
-echo ""
-echo "Running IS node 1 setup script..."
-echo "============================================"
-setup_is_command="ssh -i $key_file -o "StrictHostKeyChecking=no" -t ubuntu@$bastion_node_ip \
-    ./setup/setup-is.sh -a wso2is1 -i $wso2_is_1_ip -w $wso2_is_2_ip -r $rds_host"
-echo "$setup_is_command"
-# Handle any error and let the script continue.
-$setup_is_command || echo "Remote ssh command to setup IS node 1 through bastion failed."
-
-echo ""
-echo "Running IS node 2 setup script..."
-echo "============================================"
-setup_is_command="ssh -i $key_file -o "StrictHostKeyChecking=no" -t ubuntu@$bastion_node_ip \
-    ./setup/setup-is.sh -a wso2is2 -i $wso2_is_2_ip -w $wso2_is_1_ip -r $rds_host"
-echo "$setup_is_command"
-# Handle any error and let the script continue.
-$setup_is_command || echo "Remote ssh command to setup IS node 2 through bastion failed."
 
 echo ""
 echo "Running performance tests..."
 echo "============================================"
 scp -i "$key_file" -o StrictHostKeyChecking=no run-performance-tests.sh ubuntu@"$bastion_node_ip":/home/ubuntu/workspace/jmeter
-run_performance_tests_command="./workspace/jmeter/run-performance-tests.sh -p 443 ${run_performance_tests_options[@]}"
+run_performance_tests_command="./workspace/jmeter/run-performance-tests.sh $rds_host $db_password $db_username $adminCredentials $adminPassword -p 443 ${run_performance_tests_options[@]}"
 run_remote_tests="ssh -i $key_file -o "StrictHostKeyChecking=no" -t ubuntu@$bastion_node_ip $run_performance_tests_command"
 echo "$run_remote_tests"
 $run_remote_tests || echo "Remote test ssh command failed."

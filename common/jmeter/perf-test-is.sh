@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
 # Copyright (c) 2018, WSO2 Inc. (http://wso2.org) All Rights Reserved.
 #
 # WSO2 Inc. licenses this file to you under the Apache License,
@@ -79,8 +79,10 @@ estimate=false
 default_estimated_processing_time_in_between_tests=220
 estimated_processing_time_in_between_tests=$default_estimated_processing_time_in_between_tests
 
-default_is_port=9443
+default_is_port=443
 is_port=$default_is_port
+adminCred=$1
+adminPass=$2
 
 # Start time of the test
 test_start_time=$(date +%s)
@@ -333,10 +335,9 @@ function run_test_data_scripts() {
     declare -a scripts=("TestData_SCIM2_Add_User.jmx" "TestData_Add_OAuth_Apps.jmx" "TestData_Add_SAML_Apps.jmx")
 #    declare -a scripts=("TestData_Add_Super_Tenant_Users.jmx" "TestData_Add_OAuth_Apps.jmx" "TestData_Add_SAML_Apps.jmx" "TestData_Add_Tenants.jmx" "TestData_Add_Tenant_Users.jmx")
     setup_dir="/home/ubuntu/workspace/jmeter/setup"
-
     for script in "${scripts[@]}"; do
         script_file="$setup_dir/$script"
-        command="jmeter -Jhost=$lb_host -Jport=$is_port -n -t $script_file"
+        command="jmeter -Jhost=$lb_host -Jport=$is_port -JadminCredentials=$adminCred -JadminPassword=$adminPass -n -t $script_file"
         echo "$command"
         echo ""
         $command
@@ -419,7 +420,6 @@ function initiailize_test() {
         mkdir results
         cp "$0" results
         mv test-metadata.json results/
-
         run_test_data_scripts
     fi
 }
@@ -466,7 +466,7 @@ function test_scenarios() {
                 mkdir -p "$report_location"
 
                 time=$(expr "$test_duration" \* 60)
-                declare -ag jmeter_params=("concurrency=$users" "time=$time" "host=$lb_host" "-Jport=$is_port")
+                declare -ag jmeter_params=("concurrency=$users" "time=$time" "host=$lb_host" "-Jport=$is_port" "-JadminCredentials=$adminCred" "-JadminPassword=$adminPass")
 
                 before_execute_test_scenario
 
