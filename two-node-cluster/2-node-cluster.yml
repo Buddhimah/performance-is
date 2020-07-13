@@ -211,7 +211,7 @@ Resources:
       MultiAZ: 'false'
       Iops: !Ref DBIops
       StorageType: io1
-      DBParameterGroupName: wso2is-db-param-grp
+      DBParameterGroupName: iam-cloud-perf-rds-dbparamgroup-zbguaomq93zj
       DBSubnetGroupName: !Ref WSO2ISDBSubnetGroupsuffix
   WSO2ISDBSubnetGroupsuffix:
     Type: 'AWS::RDS::DBSubnetGroup'
