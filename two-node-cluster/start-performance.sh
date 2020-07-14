@@ -210,7 +210,6 @@ $estimate_command
 
 temp_dir=$(mktemp -d)
 
-export AWS_DEFAULT_REGION=us-east-2
 
 # Get absolute paths
 key_file=$(realpath "$key_file")
@@ -230,7 +229,7 @@ sed -i "s/suffix/$random_number/" new-2-node-cluster.yml
 echo ""
 echo "Validating stack..."
 echo "============================================"
-aws --region us-east-2 cloudformation validate-template --template-body file://new-2-node-cluster.yml
+aws --region cloudformation validate-template --template-body file://new-2-node-cluster.yml
 
 # Save metadata
 test_parameters_json='.'
@@ -242,7 +241,7 @@ jq -n \
     "$test_parameters_json" > "$results_dir"/cf-test-metadata.json
 
 stack_create_start_time=$(date +%s)
-create_stack_command="aws --region us-east-2 cloudformation create-stack --stack-name $stack_name \
+create_stack_command="aws --region cloudformation create-stack --stack-name $stack_name \
     --template-body file://new-2-node-cluster.yml --parameters \
         ParameterKey=CertificateName,ParameterValue=$certificate_name \
         ParameterKey=KeyPairName,ParameterValue=$key_name \
@@ -274,7 +273,7 @@ sleep "${minimum_stack_creation_wait_time}"m
 
 echo ""
 echo "Polling till the stack creation completes..."
-aws --region us-east-2 cloudformation wait stack-create-complete --stack-name "$stack_id"
+aws --region  cloudformation wait stack-create-complete --stack-name "$stack_id"
 printf "Stack creation time: %s\n" "$(format_time "$(measure_time "$stack_create_start_time")")"
 
 echo ""
