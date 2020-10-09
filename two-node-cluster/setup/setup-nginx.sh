@@ -72,7 +72,6 @@ echo ""
 echo "Adding IS IPs to conf file..."
 echo "============================================"
 sudo sed -i 's$server xxx.xxx.xxx.1:9443$server '$wso2_is_1_ip':9443$g' /etc/nginx/conf.d/is.conf || echo "error 1"
-sudo sed -i 's$server xxx.xxx.xxx.2:9443$server '$wso2_is_2_ip':9443$g' /etc/nginx/conf.d/is.conf || echo "error 1"
 
 echo ""
 echo "Adding workerconnection to nginx.conf file"
