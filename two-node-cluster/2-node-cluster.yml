@@ -201,6 +201,7 @@ Resources:
       BackupRetentionPeriod: '0'
       DBInstanceIdentifier: WSO2ISDBInstancesuffix
       DBName: WSO2_IS_DB_2
+      EnablePerformanceInsights : 'true'
       #EngineVersion: !Select [1, !Split ["_", !ImportValue DBEngine]]
       #Engine:  !Select [0, !Split ["_", !ImportValue DBEngine]]
       EngineVersion: 5.7.22
