@@ -72,10 +72,10 @@ password = "wso2carbon"
 name = "client-truststore.jks"
 password = "wso2carbon"
 
-[clustering]
+#[clustering]
 #membership_scheme = true
 #domain = "is590.qa.com"
-membership_scheme = "wka"
-local_member_host = "member_ip_1"
-localMemberPort = "4000"
-members = ["member_ip_2:4000", "member_ip_1:4000"]
+#membership_scheme = "wka"
+#local_member_host = "member_ip_1"
+#localMemberPort = "4000"
+#members = ["member_ip_2:4000", "member_ip_1:4000"]
