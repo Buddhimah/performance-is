@@ -422,6 +422,7 @@ Resources:
             - sudo update-alternatives --install "/usr/bin/java" "java" "/usr/lib/jvm/jdk/bin/java" 1
             - sudo update-alternatives --install "/usr/bin/javac" "javac" "/usr/lib/jvm/jdk/bin/javac" 1
             - sudo update-alternatives --install "/usr/bin/javaws" "javaws" "/usr/lib/jvm/jdk/bin/javaws" 1
+            - sudo update-alternatives --install "/usr/bin/jstack" "jstack" "/usr/lib/jvm/jdk/bin/jstack" 1
             - sudo chmod a+x /usr/bin/java
             - sudo chmod a+x /usr/bin/javac
             - sudo chmod a+x /usr/bin/javaws
