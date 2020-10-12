@@ -72,6 +72,9 @@ password = "wso2carbon"
 name = "client-truststore.jks"
 password = "wso2carbon"
 
+[http_access_log]
+pattern = "%h %l %u %t %r %s %b %{Referer}i %{User-Agent}i %T %D %F"
+
 #[clustering]
 #membership_scheme = true
 #domain = "is590.qa.com"
