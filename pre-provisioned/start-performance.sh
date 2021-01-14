@@ -1,5 +1,5 @@
 #!/bin/bash -e
-# Copyright (c) 2019, wso2 Inc. (http://wso2.org) All Rights Reserved.
+# Copyright (c) 2021, wso2 Inc. (http://wso2.org) All Rights Reserved.
 #
 # wso2 Inc. licenses this file to you under the Apache License,
 # Version 2.0 (the "License"); you may not use this file except
@@ -49,7 +49,7 @@ bastion_instance_type="$default_bastion_instance_type"
 cloud_host_name=""
 
 results_dir="$PWD/results-$timestamp"
-default_minimum_stack_creation_wait_time=10
+default_minimum_stack_creation_wait_time=5
 minimum_stack_creation_wait_time="$default_minimum_stack_creation_wait_time"
 
 function usage() {
@@ -154,7 +154,7 @@ echo "Results will be downloaded to $results_dir"
 
 echo ""
 echo "Extracting IS Performance Distribution to $results_dir"
-tar -xf target/is-performance-cloud*.tar.gz -C "$results_dir"
+tar -xf target/is-performance-pre-provisioned*.tar.gz -C "$results_dir"
 
 cp run-performance-tests.sh "$results_dir"/jmeter/
 estimate_command="$results_dir/jmeter/run-performance-tests.sh -t ${run_performance_tests_options[@]}"
@@ -232,7 +232,7 @@ echo ""
 echo "Copying files to Bastion node..."
 echo "============================================"
 copy_setup_files_command="scp -r -i $key_file -o "StrictHostKeyChecking=no" $results_dir/setup ubuntu@$bastion_node_ip:/home/ubuntu/"
-copy_repo_setup_command="scp -i $key_file -o "StrictHostKeyChecking=no" target/is-performance-cloud-*.tar.gz \
+copy_repo_setup_command="scp -i $key_file -o "StrictHostKeyChecking=no" target/is-performance-pre-provisioned-*.tar.gz \
     ubuntu@$bastion_node_ip:/home/ubuntu"
 
 echo "$copy_setup_files_command"

@@ -1,4 +1,4 @@
-# Copyright (c) 2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+# Copyright (c) 2021, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -131,10 +131,15 @@ Resources:
           - |+
 
           - - '#!/bin/bash'
-            - 'export PATH=~/.local/bin:$PATH'
+            - 'export PATH=~/.local/bin:/usr/bin:$PATH'
+            - curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+            - curl https://packages.microsoft.com/config/ubuntu/18.04/prod.list | sudo tee /etc/apt/sources.list.d/msprod.list
             - apt-get update
             - DEBIAN_FRONTEND=noninteractive apt-get install -yq mysql-client
             - DEBIAN_FRONTEND=noninteractive apt-get install -y unzip
+            - DEBIAN_FRONTEND=noninteractive env ACCEPT_EULA=Y apt-get install -y mssql-tools unixodbc-dev
+            - 'export PATH=~/.local/bin:/usr/bin:/opt/mssql-tools/bin:$PATH'
+            - echo "export PATH=$PATH" >>/etc/environment
             - curl -o jdk-setup.tar.gz https://s3.amazonaws.com/is-performance-test/java-setup/jdk-8u212-linux-x64.tar.gz
             - sudo mkdir /usr/lib/jvm
             - sudo tar -xvf jdk-setup.tar.gz -C /usr/lib/jvm

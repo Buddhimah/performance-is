@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright (c) 2019, wso2 Inc. (http://wso2.org) All Rights Reserved.
+# Copyright (c) 2021, wso2 Inc. (http://wso2.org) All Rights Reserved.
 #
 # wso2 Inc. licenses this file to you under the Apache License,
 # Version 2.0 (the "License"); you may not use this file except
@@ -77,7 +77,7 @@ cd workspace || exit 0
 echo ""
 echo "Extracting cloud performance distribution..."
 echo "============================================"
-tar -C /home/ubuntu/workspace -xzf /home/ubuntu/is-performance-cloud-*.tar.gz
+tar -C /home/ubuntu/workspace -xzf /home/ubuntu/is-performance-pre-provisioned-*.tar.gz
 
 echo ""
 echo "Running JMeter setup script..."

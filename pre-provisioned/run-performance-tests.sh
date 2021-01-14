@@ -1,5 +1,5 @@
 #!/bin/bash -e
-# Copyright (c) 2018, WSO2 Inc. (http://wso2.org) All Rights Reserved.
+# Copyright (c) 2021, WSO2 Inc. (http://wso2.org) All Rights Reserved.
 #
 # WSO2 Inc. licenses this file to you under the Apache License,
 # Version 2.0 (the "License"); you may not use this file except
@@ -115,7 +115,13 @@ function before_execute_test_scenario() {
     jmeter_params+=("port=443")
 
     echo "Cleaning databases..."
-    mysql -u $db_username -h "$rds_host" -p$db_password < /home/ubuntu/workspace/is/clean-database-pre-provisioned.sql
+    if [ "$databaseType" == "mysql" ] ; then
+      echo "Database Type MySQL."
+      mysql -u $db_username -h "$rds_host" $databaseName -p$db_password < /home/ubuntu/workspace/is/clean-database.sql
+    else
+      echo "Database Type MSSQL."
+      sqlcmd -S "$rds_host" -U $db_username -P $db_password -d $databaseName -i /home/ubuntu/workspace/is/clean-database-mssql.sql
+    fi
 }
 
 

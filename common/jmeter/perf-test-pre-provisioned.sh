@@ -1,5 +1,5 @@
 #!/bin/bash -e
-# Copyright (c) 2020, WSO2 Inc. (http://wso2.org) All Rights Reserved.
+# Copyright (c) 2021, WSO2 Inc. (http://wso2.org) All Rights Reserved.
 #
 # WSO2 Inc. licenses this file to you under the Apache License,
 # Version 2.0 (the "License"); you may not use this file except
@@ -93,6 +93,8 @@ superAdminUsername="admin"
 superAdminPassword="admin"
 populateTestData=true
 rds_host=""
+databaseType="mysql"
+databaseName="IDENTITY_DB"
 
 function get_ssh_hostname() {
     ssh -G "$1" | awk '/^hostname / { print $2 }'
@@ -119,13 +121,15 @@ function usage() {
     echo "-l: Host name."
     echo "-n: RDS Host name."
     echo "-q: Populate test data. Default true."
+    echo "-b: Database Type. Default mysql."
+    echo "-f: Database name. Default IDENTITY_DB."
     echo "-t: Estimate time without executing tests."
     echo "-p: Identity Server Port. Default $default_is_port."
     echo "-h: Display this help and exit."
     echo ""
 }
 
-while getopts "c:m:d:w:j:i:e:tp:u:k:l:n:r:s:q:h" opts; do
+while getopts "c:m:d:w:j:i:e:tp:u:k:l:n:r:s:q:b:f:h" opts; do
     case $opts in
     c)
         concurrent_users+=("${OPTARG}")
@@ -174,6 +178,12 @@ while getopts "c:m:d:w:j:i:e:tp:u:k:l:n:r:s:q:h" opts; do
         ;;
     q)
         populateTestData=${OPTARG}
+        ;;
+    b)
+        databaseType=${OPTARG}
+        ;;
+    f)
+        databaseName=${OPTARG}
         ;;
     h)
         usage
@@ -528,8 +538,6 @@ function test_scenarios() {
                 echo ""
                 echo "Zipping JTL files in $report_location"
                 zip -jm "$report_location"/jtls.zip "$report_location"/results*.jtl
-
-                #after_execute_test_scenario
 
                 local current_execution_duration="$(measure_time "$start_time")"
                 echo -n "# Completed the performance test."
