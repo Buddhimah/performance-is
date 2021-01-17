@@ -115,7 +115,13 @@ function before_execute_test_scenario() {
     jmeter_params+=("port=443")
 
     echo "Cleaning databases..."
-    mysql -u $db_username -h "$rds_host" -p$db_password < /home/ubuntu/workspace/is/clean-database-pre-provisioned.sql
+    if [ "$databaseType" = "mysql"] ; then
+      echo "Database Type MySQL."
+      mysql -u $db_username -h "$rds_host" -p$db_password < /home/ubuntu/workspace/is/clean-database-pre-provisioned-mysql.sql
+    else
+      echo "Database Type MSSQL."
+      sqlcmd -S "$rds_host" -U $db_username -P $db_password -d WSO2IS_IDENTITY_DB -i /home/ubuntu/workspace/is/clean-database-pre-provisioned-mssql.sql
+    fi
 }
 
 

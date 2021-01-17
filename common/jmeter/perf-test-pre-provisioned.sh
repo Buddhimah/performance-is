@@ -93,6 +93,7 @@ superAdminUsername="admin"
 superAdminPassword="admin"
 populateTestData=true
 rds_host=""
+databaseType="mysql"
 
 function get_ssh_hostname() {
     ssh -G "$1" | awk '/^hostname / { print $2 }'
@@ -125,7 +126,7 @@ function usage() {
     echo ""
 }
 
-while getopts "c:m:d:w:j:i:e:tp:u:k:l:n:r:s:q:h" opts; do
+while getopts "c:m:d:w:j:i:e:tp:u:k:l:n:r:s:q:b:h" opts; do
     case $opts in
     c)
         concurrent_users+=("${OPTARG}")
@@ -174,6 +175,9 @@ while getopts "c:m:d:w:j:i:e:tp:u:k:l:n:r:s:q:h" opts; do
         ;;
     q)
         populateTestData=${OPTARG}
+        ;;
+    b)
+        databaseType=${OPTARG}
         ;;
     h)
         usage
