@@ -130,17 +130,11 @@ Resources:
         'Fn::Join':
           - |+
           - - '#!/bin/bash'
-            - 'export PATH=~/.local/bin:/usr/bin:$PATH'
-            - touch /home/ubuntu/buddhima
-            - echo "Buddhima" >>/home/ubuntu/log.log
-            - curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-            - curl https://packages.microsoft.com/config/ubuntu/18.04/prod.list | sudo tee /etc/apt/sources.list.d/msprod.list
+            - 'export PATH=~/.local/bin:$PATH'
             - apt-get update
-            - DEBIAN_FRONTEND=noninteractive apt-get install -yq mysql-client
+            - DEBIAN_FRONTEND=noninteractive apt-get install -yq mysql-client >>/etc/log.log
             - DEBIAN_FRONTEND=noninteractive apt-get install -y unzip
-            - DEBIAN_FRONTEND=noninteractive apt-get install -y mssql-tools unixodbc-dev
             - curl -o jdk-setup.tar.gz https://s3.amazonaws.com/is-performance-test/java-setup/jdk-8u212-linux-x64.tar.gz
-            - 'export PATH=~/.local/bin:/usr/bin:/opt/mssql-tools/bin:$PATH'
             - sudo mkdir /usr/lib/jvm
             - sudo tar -xvf jdk-setup.tar.gz -C /usr/lib/jvm
             - sudo mv /usr/lib/jvm/jdk* /usr/lib/jvm/jdk
