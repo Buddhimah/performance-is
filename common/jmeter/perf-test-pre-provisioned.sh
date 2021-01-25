@@ -54,7 +54,7 @@
 # Finally, execute test scenarios using the function test_scenarios
 
 # Concurrent users (these will by multiplied by the number of JMeter servers)
-default_concurrent_users="50 100 150 300 500"
+default_concurrent_users="50"
 # Application heap Sizes
 default_heap_sizes="2G"
 
@@ -510,7 +510,7 @@ function test_scenarios() {
                 mkdir -p "$report_location"
 
                 time=$(expr "$test_duration" \* 60)
-                declare -ag jmeter_params=("concurrency=$users" "time=$time" "host=$lb_host" "port=$is_port" "tenantMode=true")
+                declare -ag jmeter_params=("concurrency=$users" "time=$time" "host=$lb_host" "port=$is_port" "tenantMode=true" "noOfTenants=10" "spCount=10" "userCount=10")
 
                 before_execute_test_scenario
 

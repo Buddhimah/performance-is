@@ -96,7 +96,7 @@
           </elementProp>
           <elementProp name="noOfSPs" elementType="Argument">
             <stringProp name="Argument.name">noOfSPs</stringProp>
-            <stringProp name="Argument.value">${__P(noOfSPs,1000)}</stringProp>
+            <stringProp name="Argument.value">${__P(spCount,1000)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="constantTPS" elementType="Argument">
