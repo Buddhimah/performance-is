@@ -20,6 +20,9 @@ CaseInsensitiveUsername = false
 SCIMEnabled=true
 IsBulkImportSupported=false
 
+[tenant_context]
+enable_tenant_qualified_urls = "true"
+
 #[realm_manager]
 #data_source = "WSO2USER_DB"
 
