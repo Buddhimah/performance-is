@@ -95,7 +95,6 @@ populateTestData=true
 rds_host=""
 databaseType="mysql"
 databaseName="IDENTITY_DB"
-base64EncodedCredentials="YWRtaW46YWRtaW4="
 noOfTenants=100
 spCount=10
 userCount=1000
@@ -541,6 +540,9 @@ function test_scenarios() {
                 echo ""
                 echo "Report location is $report_location"
                 mkdir -p "$report_location"
+
+                credentials="$superAdminUsername:$superAdminPassword"
+                base64EncodedCredentials=$(echo -n "$credentials" | base64)
 
                 time=$(expr "$test_duration" \* 60)
                 declare -ag jmeter_params=("concurrency=$users" "time=$time" "host=$lb_host" "port=$is_port" "adminCredentials=$base64EncodedCredentials")
