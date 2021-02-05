@@ -37,7 +37,7 @@ declare -A test_scenario0=(
     [description]="Select random super tenant users and authenticate through the RemoteUserStoreManagerService."
     [jmx]="authenticate/Authenticate_Super_Tenant_User.jmx"
     [tenantMode]=false
-    [skip]=true
+    [skip]=false
 )
 declare -A test_scenario1=(
     [name]="01-oauth_auth_code_redirect_with_consent"
