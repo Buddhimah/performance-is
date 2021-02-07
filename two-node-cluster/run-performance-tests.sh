@@ -45,7 +45,7 @@ declare -A test_scenario1=(
     [description]="Obtain an access token using the OAuth 2.0 authorization code grant type."
     [jmx]="oauth/OAuth_AuthCode_Redirect_WithConsent.jmx"
     [tenantMode]=false
-    [skip]=false
+    [skip]=true
 )
 declare -A test_scenario2=(
     [name]="02-oauth_implicit_redirect_with_consent"
